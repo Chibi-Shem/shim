@@ -1,0 +1,15 @@
+{% extends 'papaya/base.html' %}
+
+{% block content %}
+<div class="container well" id="bodyBox">
+    {% for blog in blogs %}
+        <a href="{% url 'papaya:blogs_view' blog.id%}">
+            <div class="row blog">{{ blog }}
+            </div>
+        </a>
+    {% endfor %}
+    {% if msg %}
+        {{ msg }}
+    {% endif %}
+</div>
+{% endblock %}

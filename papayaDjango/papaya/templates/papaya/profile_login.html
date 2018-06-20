@@ -1,0 +1,23 @@
+{% extends 'papaya/base.html' %}
+
+{% block content %}
+<div class="container well" id="bodyBox">
+    {% if error %}
+    <p style="font-color:red">Invalid username or password</p>
+    {% endif %}
+    <div class="row">
+        <form name="loginUser" method="post" novalidate>
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+                    {{ field.label }}
+                    {{ field.errors }}
+                    {{ field }}
+                </div>
+            {% endfor %}
+            <br>
+            <button class="btn btn-default" type="submit">Login</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "papaya/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container well" id="bodyBox">
+    <br>
+    <div class="row">
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            <div class="col-sm-5 container">
+                <div class="row">
+                    {% if blog_image %}
+                    <img src="{{ blog_image.url }}">
+                    {% else %}
+                    <img src="{% static 'papaya/images/empty.png' %}">
+                    {% endif %}
+                </div>
+                <div class="row">
+                    {{ form.image.errors }}
+                    {{ form.image }}
+                </div>
+            </div>
+            <div class="col-sm-5 container">
+                <div class="form-group">
+                    {{ form.title.label }}
+                    {{ form.title.errors }}
+                    {{ form.title }}
+                </div>
+                <div class="form-group">
+                    {{ form.author.errors }}
+                    {{ form.author.as_hidden }}
+                </div>
+                <div class="form-group">
+                    {{ form.category.label }}
+                    {{ form.category.errors }}
+                    {{ form.category }}
+                </div>
+                <div class="form-group">
+                    {{ form.date_created.errors }}
+                    {{ form.date_created.as_hidden }}
+                    {{ form.date_updated.errors }}
+                    {{ form.date_updated.as_hidden }}
+                </div>
+                <div class="form-group">
+                    {{ form.content.label }}
+                    <br>
+                    {{ form.content.errors }}
+                    {{ form.content }}
+                </div>
+                <button name="action" class="btn btn-default" type="submit" value="done">Done</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
