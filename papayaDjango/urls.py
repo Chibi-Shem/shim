@@ -3,6 +3,7 @@ from django.contrib import admin
 
 
 urlpatterns = [
-    path('', include('papaya.urls')),
+    path('', include('blogs.urls')),
+    path('', include('users.urls')),
     path('admin/', admin.site.urls),
 ]

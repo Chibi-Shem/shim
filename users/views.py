@@ -3,14 +3,14 @@ from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
 from django.views.generic.base import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .forms import UserRegistrationForm, UserEditForm
-from .forms import UserChangepassForm, BlogForm, UserLoginForm
-from .models import Blog, User
+from .forms import (UserRegistrationForm, UserEditForm,
+                    UserChangepassForm, UserLoginForm)
+from .models import User
 
 
 class ProfileCreateView(TemplateView):
     """Displays the user's registration page"""
-    template_name = "papaya/profile_create.html"
+    template_name = "profile_create.html"
 
     def get(self, *args, **kwargs):
         form = UserRegistrationForm()
@@ -26,13 +26,13 @@ class ProfileCreateView(TemplateView):
                                 username=username,
                                 password=password)
             login(self.request, user)
-            return redirect(reverse('papaya:listing'))
+            return redirect(reverse('blogs:listing'))
         return render(self.request, self.template_name, {'form':form})
 
 
 class ProfileEditView(LoginRequiredMixin, TemplateView):
     """Displays the user's edit page"""
-    template_name = "papaya/profile_edit.html"
+    template_name = "profile_edit.html"
     
     def get(self, *args, **kwargs):
         user = User.objects.get(username=self.request.user.username)
@@ -47,7 +47,7 @@ class ProfileEditView(LoginRequiredMixin, TemplateView):
             if not self.request.FILES:
                 form.cleaned_data['image'] = user.image
             form.save()
-            return redirect(reverse('papaya:profile',
+            return redirect(reverse('users:profile',
                                 args=(user.id,)))
         return render(self.request, self.template_name,
                 {'form':form, 'profile_image':user.image})
@@ -55,7 +55,7 @@ class ProfileEditView(LoginRequiredMixin, TemplateView):
 
 class ProfileChangepassView(LoginRequiredMixin, TemplateView):
     """Displays the user's edit password page"""
-    template_name = "papaya/profile_changepass.html"
+    template_name = "profile_changepass.html"
     error = ''
     
     def get(self, *args, **kwargs):
@@ -80,7 +80,7 @@ class ProfileChangepassView(LoginRequiredMixin, TemplateView):
                                     username=username,
                                     password=password_new)
                 login(self.request, user)
-                return redirect(reverse('papaya:profile',
+                return redirect(reverse('users:profile',
                             args=(self.request.user.id,)))
             else:
                 self.error = 'Invalid password'
@@ -90,7 +90,7 @@ class ProfileChangepassView(LoginRequiredMixin, TemplateView):
 
 class ProfileLoginView(TemplateView):
     """Displays the user's login page"""
-    template_name = "papaya/profile_login.html"
+    template_name = "profile_login.html"
     error = ''
     
     def get(self, *args, **kwargs):
@@ -108,7 +108,7 @@ class ProfileLoginView(TemplateView):
                         password=password)
             if user is not None:
                 login(self.request, user)
-                return redirect(reverse('papaya:listing'))
+                return redirect(reverse('blogs:listing'))
             else:
                 self.error = 'Invalid username or password'
         return render(self.request, self.template_name,
@@ -120,105 +120,14 @@ class ProfileLogoutView(TemplateView):
     
     def get(self, *args, **kwargs):
         logout(self.request)
-        return redirect(reverse('papaya:listing'))
+        return redirect(reverse('blogs:listing'))
 
 
 class ProfileView(TemplateView):
     """Displays the user's profile page"""
-    template_name = 'papaya/profile.html'
+    template_name = 'profile.html'
     
     def get(self, *args, **kwargs):
         profile_id = kwargs.get('profile_id')
         user = get_object_or_404(User, id=profile_id)
         return render(self.request, self.template_name, {'profile':user})
-
-
-class BlogOwnedView(LoginRequiredMixin, TemplateView):
-    """Displays the user's blogs page"""
-    template_name = 'papaya/blogs.html'
-    
-    def get(self, *args, **kwargs):
-        return render(self.request, self.template_name,
-                {'blogs':Blog.objects.filter(author=self.request.user)})
-
-
-class BlogCreateView(LoginRequiredMixin, TemplateView):
-    """Displays the create blogs page"""
-    template_name = 'papaya/blogs_create.html'
-    
-    def get(self, *args, **kwargs):
-        form = BlogForm(initial={'author':self.request.user})
-        return render(self.request, self.template_name,
-                     {'form':form})
-
-    def post(self, *args, **kwargs):
-        form = BlogForm(self.request.POST, self.request.FILES)
-        if form.is_valid():
-            form.save()
-            return redirect(reverse('papaya:blogs'))
-        return render(self.request, self.template_name,
-                     {'form':form})
-
-
-class BlogEditView(LoginRequiredMixin, TemplateView):
-    """Displays the blog's edit page"""
-    template_name = 'papaya/blogs_create.html'
-    
-    def get(self, *args, **kwargs):
-        blog_id = kwargs.get('blog_id')
-        blog = get_object_or_404(Blog, id=blog_id, author=self.request.user)
-        form = BlogForm(instance=blog)
-        return render(self.request, self.template_name,
-                    {'form':form, 'blog_image':blog.image})
-
-    def post(self, *args, **kwargs):
-        blog_id = kwargs.get('blog_id')
-        blog = get_object_or_404(Blog, id=blog_id, author=self.request.user)
-        form = BlogForm(self.request.POST, self.request.FILES, instance=blog)
-        if form.is_valid():
-            if not self.request.FILES:
-                form.cleaned_data['image'] = blog.image
-            form.save()
-            return redirect(reverse('papaya:blogs_view', args=(blog_id,)))
-        return render(self.request, self.template_name,
-                    {'form':form, 'blog_image':blog.image})
-
-
-class BlogDeleteView(LoginRequiredMixin, TemplateView):
-    """Deletes a blog """
-    
-    def get(self, *args, **kwargs):
-        blog_id = kwargs.get('blog_id')
-        blog = get_object_or_404(Blog, id=blog_id, author=self.request.user)
-        blog.delete()
-        return redirect(reverse('papaya:blogs'))
-
-
-class BlogView(TemplateView):
-    """Displays the blog's detail page"""
-    template_name = 'papaya/blogs_view.html'
-
-    def get(self, *args, **kwargs):
-        blog_id = kwargs.get('blog_id')
-        blog = get_object_or_404(Blog, id=blog_id)
-        return render(self.request, self.template_name,
-                     {'blog':blog})
-
-
-class BlogListView(TemplateView):
-    """Displays the list of all blogs"""
-    template_name = "papaya/listing.html"
-    msg = ''
-
-    def get(self, *args, **kwargs):
-        blogs = Blog.objects.all()
-        return render(self.request, self.template_name,
-                {'blogs':blogs, 'msg':self.msg})
-
-    def post(self, *args, **kwargs):
-        searchword = self.request.POST['search']
-        blogs = Blog.objects.filter(title__icontains=searchword)
-        if not blogs:
-            self.msg = 'No results found!'
-        return render(self.request, self.template_name,
-                {'blogs':blogs, 'msg':self.msg})

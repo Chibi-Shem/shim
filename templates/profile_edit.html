@@ -1,4 +1,4 @@
-{% extends 'papaya/base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block content %}
@@ -15,7 +15,7 @@
                     {% if profile_image %}
                     <img src="{{ profile_image.url }}">
                     {% else %}
-                    <img src="{% static 'papaya/images/anon.jpeg' %}">
+                    <img src="{% static 'images/anon.jpeg' %}">
                     {% endif %}
                 </div>
                 <div class="row">

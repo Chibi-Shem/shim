@@ -1,4 +1,4 @@
-{% extends "papaya/base.html" %}
+{% extends "base.html" %}
 
 {% block content %}
 <div class="container well" id="bodyBox">
@@ -6,10 +6,10 @@
         <h1>{{ user.username }}'s Blogs</h1>
     </div>
     <div class="row">
-        <a class="btn btn-default" href="{% url 'papaya:blogs_create' %}">Add blog</a>
+        <a class="btn btn-default" href="{% url 'blogs:blogs_create' %}">Add blog</a>
     </div>
     {% for blog in blogs %}
-        <a href="{% url 'papaya:blogs_view' blog.id%}">
+        <a href="{% url 'blogs:blogs_view' blog.id%}">
             <div class="row blog">{{ blog }}
             </div>
         </a>

@@ -1,4 +1,4 @@
-{% extends "papaya/base.html" %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block content %}
@@ -10,7 +10,7 @@
                 {% if blog.image %}
                 <img src="{{ blog.image.url }}">
                 {% else %}
-                <img src="{% static 'papaya/images/empty.png' %}">
+                <img src="{% static 'images/empty.png' %}">
                 {% endif %}
             </div>
         </div>
@@ -19,7 +19,7 @@
                 <h1>{{ blog.title }}</h1>
             </div>
             <div class="row">
-                <h3><i>By: <a href="{% url 'papaya:profile' blog.author.id%}">{{ blog.author.username }}</a></i></h3>
+                <h3><i>By: <a href="{% url 'users:profile' blog.author.id%}">{{ blog.author.username }}</a></i></h3>
             </div>
             <br>
             <div class="row">
@@ -44,8 +44,8 @@
             {% if user.is_authenticated and blog.author == user %}
                 <form method="post">
                     {% csrf_token %}
-                    <a class="btn btn-default" type="btn" href="{% url 'papaya:blogs_edit' blog.id %}">Edit</a>
-                    <a class="btn btn-default" type="btn" href="{% url 'papaya:blogs_delete' blog.id %}">Delete</a>
+                    <a class="btn btn-default" type="btn" href="{% url 'blogs:blogs_edit' blog.id %}">Edit</a>
+                    <a class="btn btn-default" type="btn" href="{% url 'blogs:blogs_delete' blog.id %}">Delete</a>
                 </form>
             {% endif %}
         </div>

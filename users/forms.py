@@ -1,7 +1,6 @@
 from django import forms
 from django.forms import Form, ModelForm
-from django.contrib.auth.forms import AuthenticationForm
-from .models import Blog, User
+from .models import User
 
 class UserRegistrationForm(ModelForm):
     """Registration form for users"""
@@ -114,13 +113,3 @@ class UserChangepassForm(ModelForm):
         user = User.objects.get(username=username)
         user.set_password(self.cleaned_data['password_new'])
         user.save()
-
-
-class BlogForm(ModelForm):
-    """Blog form for users"""
-    class Meta:
-        model = Blog
-        fields = ['image', 'title', 'author', 'category', 'content']
-
-    image = forms.ImageField(widget=forms.FileInput, required=False,
-                            label="Image:")

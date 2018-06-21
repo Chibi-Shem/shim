@@ -35,7 +35,7 @@
 <nav class="navbar navbar-fixed-top">
     <div class="container-fluid">
         <div class="navbar-header">
-            <a class="navbar-brand" href="{% url 'papaya:listing' %}" ><img src="{% static 'papaya/images/papaya.jpg' %}" id='logo'>PAPAYA</a>
+            <a class="navbar-brand" href="{% url 'blogs:listing' %}" ><img src="{% static 'images/papaya.jpg' %}" id='logo'>PAPAYA</a>
         </div>
         <ul class="nav navbar-nav navbar-right">
             <li class="dropdown">
@@ -50,16 +50,16 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-right">
                         <li>
-                            <a href="{% url 'papaya:listing' %}">Home</a>
+                            <a href="{% url 'blogs:listing' %}">Home</a>
                         </li>
                         <li>
-                            <a href="{% url 'papaya:profile' user.id %}">My profile</a>
+                            <a href="{% url 'users:profile' user.id %}">My profile</a>
                         </li>
                         <li>
-                            <a href="{% url 'papaya:blogs' %}">My blogs</a>
+                            <a href="{% url 'blogs:blogs' %}">My blogs</a>
                         </li>
                         <li>
-                            <a href="{% url 'papaya:profile_logout' %}">Logout</a>
+                            <a href="{% url 'users:profile_logout' %}">Logout</a>
                         </li>
                     </ul>
                 {% else %}
@@ -68,19 +68,19 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-right">
                         <li>
-                            <a href="{% url 'papaya:listing' %}">Home</a>
+                            <a href="{% url 'blogs:listing' %}">Home</a>
                         </li>
                         <li>
-                            <a href="{% url 'papaya:profile_login' %}">Sign in</a>
+                            <a href="{% url 'users:profile_login' %}">Sign in</a>
                         </li>
                         <li>
-                            <a href="{% url 'papaya:profile_create' %}">Create Account</a>
+                            <a href="{% url 'users:profile_create' %}">Create Account</a>
                         </li>
                     </ul>
                 {% endif %}
             </li>
         </ul>
-        <form class="navbar-form navbar-right" method="post" action="{% url 'papaya:listing' %}">
+        <form class="navbar-form navbar-right" method="post" action="{% url 'blogs:listing' %}">
             {% csrf_token %}
             <div class="form-group">
                 <input style="width:300px" class="form-control" type="text" placeholder="search" name="search">
