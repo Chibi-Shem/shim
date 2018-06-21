@@ -1,164 +1,224 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.models import User
-from django.http import HttpResponseRedirect
-from django.contrib import messages
 from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.views.generic.base import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import UserRegistrationForm, UserEditForm
 from .forms import UserChangepassForm, BlogForm, UserLoginForm
 from .models import Blog, User
 
 
-def listing(request):
-    """Displays the list of all blogs"""
-    blogs = Blog.objects.all()
-    msg = ''
-    if request.method == 'POST':
-        blogs = Blog.objects.filter(title__icontains=request.POST['search'])
-        if not blogs:
-            msg = 'No results found!'
-    return render(request, 'papaya/listing.html', {'blogs':blogs, 'msg':msg})
-
-
-def profile_create(request):
+class ProfileCreateView(TemplateView):
     """Displays the user's registration page"""
-    form = UserRegistrationForm()
-    if request.method == 'POST':
-        form = UserRegistrationForm(request.POST)
+    template_name = "papaya/profile_create.html"
+
+    def get(self, *args, **kwargs):
+        form = UserRegistrationForm()
+        return render(self.request, self.template_name, {'form':form})
+
+    def post(self, *args, **kwargs):
+        form = UserRegistrationForm(self.request.POST)
         if form.is_valid():
             form.save()
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
-            user = authenticate(request,
+            user = authenticate(self.request,
                                 username=username,
                                 password=password)
-            login(request, user)
+            login(self.request, user)
             return redirect(reverse('papaya:listing'))
-    return render(request, 'papaya/profile_create.html', {'form':form})
+        return render(self.request, self.template_name, {'form':form})
 
 
-@login_required()
-def profile_edit(request):
+class ProfileEditView(LoginRequiredMixin, TemplateView):
     """Displays the user's edit page"""
-    user = User.objects.get(username=request.user.username)
-    form = UserEditForm(instance=user)
-    if request.method == 'POST':
-        form = UserEditForm(request.POST, request.FILES, instance=user)
+    template_name = "papaya/profile_edit.html"
+    
+    def get(self, *args, **kwargs):
+        user = User.objects.get(username=self.request.user.username)
+        form = UserEditForm(instance=user)
+        return render(self.request, self.template_name,
+                {'form':form, 'profile_image':user.image})
+
+    def post(self, *args, **kwargs):
+        user = User.objects.get(username=self.request.user.username)
+        form = UserEditForm(self.request.POST, self.request.FILES, instance=user)
         if form.is_valid():
-            if not request.FILES:
+            if not self.request.FILES:
                 form.cleaned_data['image'] = user.image
             form.save()
             return redirect(reverse('papaya:profile',
                                 args=(user.id,)))
-    return render(request, 'papaya/profile_edit.html',
-            {'form':form, 'profile_image':user.image})
+        return render(self.request, self.template_name,
+                {'form':form, 'profile_image':user.image})
 
 
-@login_required()
-def profile_changepass(request):
+class ProfileChangepassView(LoginRequiredMixin, TemplateView):
     """Displays the user's edit password page"""
-    error = False
-    username = request.user.username
-    user = User.objects.get(username=username)
-    form = UserChangepassForm()
-    if request.method == 'POST':
-        form = UserChangepassForm(request.POST)
+    template_name = "papaya/profile_changepass.html"
+    error = ''
+    
+    def get(self, *args, **kwargs):
+        username = self.request.user.username
+        user = User.objects.get(username=username)
+        form = UserChangepassForm()
+        return render(self.request, self.template_name,
+                     {'form':form, 'error':self.error})
+
+    def post(self, *args, **kwargs):
+        username = self.request.user.username
+        form = UserChangepassForm(self.request.POST)
         if form.is_valid():
             password = form.cleaned_data['password']
-            user = authenticate(request,
+            user = authenticate(self.request,
                                 username=username,
                                 password=password)
             if user is not None:
                 form.update(username)
                 password_new = form.cleaned_data['password_new']
-                user = authenticate(request,
+                user = authenticate(self.request,
                                     username=username,
                                     password=password_new)
-                login(request, user)
-                return redirect(reverse('papaya:profile', args=(request.user.id,)))
+                login(self.request, user)
+                return redirect(reverse('papaya:profile',
+                            args=(self.request.user.id,)))
             else:
-                error = True
-    return render(request, 'papaya/profile_changepass.html',
-                 {'form':form, 'error':error})
+                self.error = 'Invalid password'
+        return render(self.request, self.template_name,
+                     {'form':form, 'error':self.error})
 
 
-def profile_login(request):
+class ProfileLoginView(TemplateView):
     """Displays the user's login page"""
-    error = False
-    form = UserLoginForm()
-    if request.method == 'POST':
-        form = UserLoginForm(request.POST)
+    template_name = "papaya/profile_login.html"
+    error = ''
+    
+    def get(self, *args, **kwargs):
+        form = UserLoginForm()
+        return render(self.request, self.template_name,
+                     {'form':form,'error':self.error})
+
+    def post(self, *args, **kwargs):
+        form = UserLoginForm(self.request.POST)
         if form.is_valid():
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
-            user = authenticate(request, username=username, password=password)
+            user = authenticate(self.request,
+                        username=username,
+                        password=password)
             if user is not None:
-                login(request, user)
+                login(self.request, user)
                 return redirect(reverse('papaya:listing'))
             else:
-                error = True
-    return render(request, 'papaya/profile_login.html',
-                 {'form':form,'error':error})
+                self.error = 'Invalid username or password'
+        return render(self.request, self.template_name,
+                     {'form':form,'error':self.error})
 
 
-def profile_logout(request):
+class ProfileLogoutView(TemplateView):
     """Logs out a user"""
-    logout(request)
-    return redirect(reverse('papaya:listing'))
+    
+    def get(self, *args, **kwargs):
+        logout(self.request)
+        return redirect(reverse('papaya:listing'))
 
 
-def profile(request, profile_id):
+class ProfileView(TemplateView):
     """Displays the user's profile page"""
-    user = User.objects.get(id=profile_id)
-    return render(request, 'papaya/profile.html', {'profile':user})
+    template_name = 'papaya/profile.html'
+    
+    def get(self, *args, **kwargs):
+        profile_id = kwargs.get('profile_id')
+        user = get_object_or_404(User, id=profile_id)
+        return render(self.request, self.template_name, {'profile':user})
 
 
-def blogs(request):
+class BlogOwnedView(LoginRequiredMixin, TemplateView):
     """Displays the user's blogs page"""
-    return render(request, 'papaya/blogs.html',
-                 {'blogs':Blog.objects.filter(author=request.user)})
+    template_name = 'papaya/blogs.html'
+    
+    def get(self, *args, **kwargs):
+        return render(self.request, self.template_name,
+                {'blogs':Blog.objects.filter(author=self.request.user)})
 
 
-@login_required()
-def blogs_create(request):
+class BlogCreateView(LoginRequiredMixin, TemplateView):
     """Displays the create blogs page"""
-    form = BlogForm(initial={'author':request.user})
-    if request.method=='POST':
-        form = BlogForm(request.POST, request.FILES)
+    template_name = 'papaya/blogs_create.html'
+    
+    def get(self, *args, **kwargs):
+        form = BlogForm(initial={'author':self.request.user})
+        return render(self.request, self.template_name,
+                     {'form':form})
+
+    def post(self, *args, **kwargs):
+        form = BlogForm(self.request.POST, self.request.FILES)
         if form.is_valid():
             form.save()
             return redirect(reverse('papaya:blogs'))
-    return render(request, 'papaya/blogs_create.html',
-                 {'form':form})
+        return render(self.request, self.template_name,
+                     {'form':form})
 
 
-@login_required()
-def blogs_edit(request, blog_id):
+class BlogEditView(LoginRequiredMixin, TemplateView):
     """Displays the blog's edit page"""
-    blog = get_object_or_404(Blog, id=blog_id, author=request.user)
-    form = BlogForm(instance=blog)
-    if request.method=='POST':
-        form = BlogForm(request.POST, request.FILES, instance=blog)
+    template_name = 'papaya/blogs_create.html'
+    
+    def get(self, *args, **kwargs):
+        blog_id = kwargs.get('blog_id')
+        blog = get_object_or_404(Blog, id=blog_id, author=self.request.user)
+        form = BlogForm(instance=blog)
+        return render(self.request, self.template_name,
+                    {'form':form, 'blog_image':blog.image})
+
+    def post(self, *args, **kwargs):
+        blog_id = kwargs.get('blog_id')
+        blog = get_object_or_404(Blog, id=blog_id, author=self.request.user)
+        form = BlogForm(self.request.POST, self.request.FILES, instance=blog)
         if form.is_valid():
-            if not request.FILES:
+            if not self.request.FILES:
                 form.cleaned_data['image'] = blog.image
             form.save()
             return redirect(reverse('papaya:blogs_view', args=(blog_id,)))
-    return render(request, 'papaya/blogs_create.html',
+        return render(self.request, self.template_name,
                     {'form':form, 'blog_image':blog.image})
 
 
-@login_required()
-def blogs_delete(request, blog_id):
+class BlogDeleteView(LoginRequiredMixin, TemplateView):
     """Deletes a blog """
-    blog = get_object_or_404(Blog, id=blog_id, author=request.user)
-    blog.delete()
-    return redirect(reverse('papaya:blogs'))
+    
+    def get(self, *args, **kwargs):
+        blog_id = kwargs.get('blog_id')
+        blog = get_object_or_404(Blog, id=blog_id, author=self.request.user)
+        blog.delete()
+        return redirect(reverse('papaya:blogs'))
 
 
-def blogs_view(request, blog_id):
+class BlogView(TemplateView):
     """Displays the blog's detail page"""
-    blog = get_object_or_404(Blog, id=blog_id)
-    return render(request, 'papaya/blogs_view.html',
-                 {'blog':blog})
+    template_name = 'papaya/blogs_view.html'
+
+    def get(self, *args, **kwargs):
+        blog_id = kwargs.get('blog_id')
+        blog = get_object_or_404(Blog, id=blog_id)
+        return render(self.request, self.template_name,
+                     {'blog':blog})
+
+
+class BlogListView(TemplateView):
+    """Displays the list of all blogs"""
+    template_name = "papaya/listing.html"
+    msg = ''
+
+    def get(self, *args, **kwargs):
+        blogs = Blog.objects.all()
+        return render(self.request, self.template_name,
+                {'blogs':blogs, 'msg':self.msg})
+
+    def post(self, *args, **kwargs):
+        searchword = self.request.POST['search']
+        blogs = Blog.objects.filter(title__icontains=searchword)
+        if not blogs:
+            self.msg = 'No results found!'
+        return render(self.request, self.template_name,
+                {'blogs':blogs, 'msg':self.msg})

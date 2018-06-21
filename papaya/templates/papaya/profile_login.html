@@ -2,9 +2,7 @@
 
 {% block content %}
 <div class="container well" id="bodyBox">
-    {% if error %}
-    <p style="font-color:red">Invalid username or password</p>
-    {% endif %}
+    {{ error }}
     <div class="row">
         <form name="loginUser" method="post" novalidate>
             {% csrf_token %}
